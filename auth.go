@@ -13,25 +13,6 @@ type Auth struct {
 	AccessToken string `json:"access_token"`
 }
 
-type requestTokenRequest struct {
-	ConsumerKey string `json:"consumer_key"`
-	RedirectUri string `json:"redirect_uri"`
-}
-
-type requestTokenResponse struct {
-	Code string `json:"code"`
-}
-
-type accessTokenRequest struct {
-	ConsumerKey string `json:"consumer_key"`
-	Code        string `json:"code"`
-}
-
-type accessTokenResponse struct {
-	AccessToken string `json:"access_token"`
-	Username    string `json:"username"`
-}
-
 func (c *Client) Authenticate(consumerKey string) *Auth {
 	redirectUri := fmt.Sprintf("http://localhost:%d/oauth/pocket/callback", 5000)
 	requestToken, err := c.getRequestToken(consumerKey, redirectUri)
@@ -76,23 +57,35 @@ func (c *Client) Authenticate(consumerKey string) *Auth {
 }
 
 func (c *Client) getRequestToken(consumerKey, redirectUri string) (string, error) {
-	in := requestTokenRequest{
+	in := struct {
+		ConsumerKey string `json:"consumer_key"`
+		RedirectUri string `json:"redirect_uri"`
+	}{
 		ConsumerKey: consumerKey,
 		RedirectUri: redirectUri,
 	}
-	var out requestTokenResponse
+
+	var out struct {
+		Code string `json:"code"`
+	}
 
 	err := c.Post("/oauth/request", in, &out)
 	return out.Code, err
 }
 
 func (c *Client) getAccessToken(consumerKey, code string) (string, error) {
-	in := accessTokenRequest{
+	in := struct {
+		ConsumerKey string `json:"consumer_key"`
+		Code        string `json:"code"`
+	}{
 		ConsumerKey: consumerKey,
 		Code:        code,
 	}
 
-	var out accessTokenResponse
+	var out struct {
+		AccessToken string `json:"access_token"`
+		Username    string `json:"username"`
+	}
 
 	err := c.Post("/oauth/authorize", in, &out)
 	return out.AccessToken, err
