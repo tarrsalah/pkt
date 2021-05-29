@@ -19,7 +19,9 @@ func TestGetRequestToken(t *testing.T) {
 
 	mux.HandleFunc("/oauth/request", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		code := requestTokenResponse{Code: expectedCode}
+		code := struct {
+			Code string `json:"code"`
+		}{Code: expectedCode}
 		json.NewEncoder(w).Encode(code)
 	})
 
@@ -47,7 +49,10 @@ func TestGetAccessToken(t *testing.T) {
 
 	mux.HandleFunc("/oauth/authorize", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		accessToken := accessTokenResponse{
+		accessToken := struct {
+			AccessToken string `json:"access_token"`
+			Username    string `json:"username"`
+		}{
 			AccessToken: expectedAccessToken,
 			Username:    expectedUserName,
 		}
