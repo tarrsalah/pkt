@@ -9,7 +9,7 @@ import (
 func TestGetRequestToken(t *testing.T) {
 	// request
 	consumerKey := "123"
-	redirectUri := "http://localhost"
+	redirectURI := "http://localhost"
 
 	// response
 	expectedCode := "456"
@@ -25,7 +25,7 @@ func TestGetRequestToken(t *testing.T) {
 		json.NewEncoder(w).Encode(code)
 	})
 
-	code, err := client.getRequestToken(consumerKey, redirectUri)
+	code, err := client.getRequestToken(consumerKey, redirectURI)
 	if err != nil {
 		t.Error(err)
 	}

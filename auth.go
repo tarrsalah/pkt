@@ -8,22 +8,24 @@ import (
 	"github.com/pkg/browser"
 )
 
+// Auth is a pair of keys
 type Auth struct {
 	ConsumerKey string `json:"consumer_key"`
 	AccessToken string `json:"access_token"`
 }
 
+// Authenticate a consumer key
 func (c *Client) Authenticate(consumerKey string) *Auth {
-	redirectUri := fmt.Sprintf("http://localhost:%d/oauth/pocket/callback", 5000)
-	requestToken, err := c.getRequestToken(consumerKey, redirectUri)
+	redirectURI := fmt.Sprintf("http://localhost:%d/oauth/pocket/callback", 5000)
+	requestToken, err := c.getRequestToken(consumerKey, redirectURI)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	authorizeUrl := fmt.Sprintf(
+	authorizeURL := fmt.Sprintf(
 		"https://getpocket.com/auth/authorize?request_token=%s&redirect_uri=%s",
 		requestToken,
-		redirectUri,
+		redirectURI,
 	)
 
 	ch := make(chan struct{})
@@ -41,7 +43,7 @@ func (c *Client) Authenticate(consumerKey string) *Auth {
 	}()
 	defer server.Close()
 
-	browser.OpenURL(authorizeUrl)
+	browser.OpenURL(authorizeURL)
 	<-ch
 
 	accessToken, err := c.getAccessToken(consumerKey, requestToken)
@@ -56,13 +58,13 @@ func (c *Client) Authenticate(consumerKey string) *Auth {
 	return auth
 }
 
-func (c *Client) getRequestToken(consumerKey, redirectUri string) (string, error) {
+func (c *Client) getRequestToken(consumerKey, redirectURI string) (string, error) {
 	in := struct {
 		ConsumerKey string `json:"consumer_key"`
-		RedirectUri string `json:"redirect_uri"`
+		RedirectURI string `json:"redirect_uri"`
 	}{
 		ConsumerKey: consumerKey,
-		RedirectUri: redirectUri,
+		RedirectURI: redirectURI,
 	}
 
 	var out struct {
