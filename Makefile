@@ -4,7 +4,11 @@ build:
 	go build -o pkt ./cmd/pkt 
 
 test:
-	go test -v -cover
+	go test ./... -v
+
+run: build
+	./pkt
+
 
 clean:
 	rm *.bolt
