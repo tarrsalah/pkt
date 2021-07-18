@@ -13,7 +13,7 @@ func (c *Client) Retrieve(after string, offset int) ([]Item, error) {
 			Offset:     offset,
 			DetailType: "complete",
 			Sort:       "newest",
-			Count:      PAGE_COUNT,
+			Count:      PageCount,
 		},
 	}
 	response := retrieveResponse{}
@@ -37,7 +37,7 @@ func (c *Client) RetrieveAll(after string) ([]Item, error) {
 		}
 
 		items = append(items, retrieved...)
-		offset = offset + PAGE_COUNT
+		offset = offset + PageCount
 	}
 
 	return items, nil

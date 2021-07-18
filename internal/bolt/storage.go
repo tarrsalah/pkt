@@ -6,7 +6,9 @@ import (
 	"sort"
 
 	"github.com/tarrsalah/pkt"
+	"github.com/tarrsalah/pkt/internal/config"
 	"go.etcd.io/bbolt"
+	"path/filepath"
 )
 
 var bucketName = []byte("pkt")
@@ -15,7 +17,8 @@ type DB struct {
 	db *bbolt.DB
 }
 
-func NewDB(path string) DB {
+func NewDB() DB {
+	path := filepath.Join(config.Dir(), "pkt.bolt")
 	db, err := bbolt.Open(path, 0666, nil)
 	if err != nil {
 		log.Fatal(err)
@@ -73,7 +76,7 @@ func (b DB) Put(items []pkt.Item) {
 			if err != nil {
 				return err
 			}
-			b.Put([]byte(item.Id), v)
+			b.Put([]byte(item.ID), v)
 		}
 
 		return nil

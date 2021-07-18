@@ -1,29 +1,61 @@
 package pkt
 
-import "net/url"
+import (
+	"fmt"
+	"net/url"
+)
 
-const PAGE_COUNT = 100
+// PageCount is the default response page count
+const PageCount = 100
 
+// Tag is a packet tag
 type Tag struct {
-	Id    string `json:"item_id"`
+	ID    string `json:"item_id"`
 	Label string `json:"tag"`
 }
 
-type Store interface {
-	Get() []Item
-	Put([]Item)
-	Close()
+func (t Tag) String() string {
+	return t.Label
 }
 
+// Tags is a set of Tags
+type Tags []Tag
+
+// Len return the length of a list of tags
+func (t Tags) Len() int {
+	return len(t)
+}
+
+// Swap swaps two tags
+func (t Tags) Swap(i, j int) {
+	t[i], t[j] = t[j], t[i]
+}
+
+// Less compares two tags by label
+func (t Tags) Less(i, j int) bool {
+	return t[i].Label < t[j].Label
+}
+
+func (t Tags) String() string {
+	s := ""
+	for _, tag := range t {
+		s += fmt.Sprintf("(%s)", tag)
+	}
+
+	return s
+}
+
+// Item is the poeckt item
 type Item struct {
-	Id            string         `json:"item_id"`
-	GivenUrl      string         `json:"given_url"`
+	ID            string         `json:"item_id"`
+	GivenURL      string         `json:"given_url"`
 	GivenTitle    string         `json:"given_title"`
 	ResolvedTitle string         `json:"resolved_title"`
 	AddedAt       string         `json:"time_added"`
 	TagsMap       map[string]Tag `json:"tags"`
 }
 
+// Title gets the item's title
 func (item Item) Title() string {
 	if len(item.ResolvedTitle) > 3 {
 		return item.ResolvedTitle
@@ -32,20 +64,78 @@ func (item Item) Title() string {
 	return item.GivenTitle
 }
 
-func (item Item) Url() string {
-	return item.GivenUrl
+// URL returns the item's given URL
+func (item Item) URL() string {
+	return item.GivenURL
 }
 
+// Host returns the item's given URL host
 func (item Item) Host() string {
-	itemUrl, _ := url.Parse(item.GivenUrl)
-	return itemUrl.Host
+	itemURL, _ := url.Parse(item.GivenURL)
+	return itemURL.Host
 }
 
-func (item Item) Tags() []string {
-	tags := []string{}
+// Tags returns the list of the item's tag
+func (item Item) Tags() Tags {
+	tags := []Tag{}
 	for _, tag := range item.TagsMap {
-		tags = append(tags, tag.Label)
+		tags = append(tags, tag)
 	}
 
 	return tags
+}
+
+// Items is a list of items
+type Items []Item
+
+// Tags return a list of tags from a list of items
+func (items Items) Tags() Tags {
+	tags := []Tag{}
+	tagsMap := map[string]Tag{}
+
+	_ = tagsMap
+
+	for _, item := range items {
+		for _, tag := range item.Tags() {
+			tagsMap[tag.Label] = tag
+		}
+	}
+
+	for _, tag := range tagsMap {
+		tags = append(tags, tag)
+	}
+
+	return tags
+}
+
+// getTaggedItems filter a list of items
+func getTaggedItems(items []Item, filters []string) []Item {
+	if len(filters) == 0 {
+		filteredItems := make([]Item, len(items))
+		copy(filteredItems, items)
+		return filteredItems
+	}
+
+	filteredItems := []Item{}
+	for _, item := range items {
+		isTagged := false
+		for _, tag := range item.Tags() {
+			for _, filter := range filters {
+				if filter == tag.Label {
+					isTagged = true
+					break
+				}
+			}
+
+			if isTagged {
+				break
+			}
+		}
+
+		if isTagged {
+			filteredItems = append(filteredItems, item)
+		}
+	}
+
+	return filteredItems
 }

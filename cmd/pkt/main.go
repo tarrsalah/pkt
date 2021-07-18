@@ -2,16 +2,16 @@ package main
 
 import (
 	"bufio"
-	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"strings"
 
 	"github.com/tarrsalah/pkt"
-	"github.com/tarrsalah/pkt/store/bolt"
+	"github.com/tarrsalah/pkt/internal/bolt"
+	"github.com/tarrsalah/pkt/internal/config"
+	"github.com/tarrsalah/pkt/internal/ui"
 )
 
 var (
@@ -68,13 +68,10 @@ run %s for usage.
 }
 
 func show() {
-	boltPath := getBoltPath()
-	configPath := getConfigPath()
-
-	db := bolt.NewDB(boltPath)
+	db := bolt.NewDB()
 	defer db.Close()
 
-	auth := loadAuth(configPath)
+	auth := config.GetAuth()
 	client := pkt.NewClient(auth)
 
 	oldItems := db.Get()
@@ -91,44 +88,18 @@ func show() {
 	db.Put(newItems)
 
 	items := db.Get()
-	draw(items)
+	app := ui.NewWindow(items)
+	app.Run()
 }
 
 func auth() {
-	configPath := getConfigPath()
 	r := bufio.NewReader(os.Stdin)
 	fmt.Print("pkt: enter your consumer key: ")
 	key, _ := r.ReadString('\n')
 
 	client := pkt.NewClient(nil)
 	auth := client.Authenticate(strings.TrimSpace(key))
-	saveAuth(auth, configPath)
+	config.PutAuth(auth)
 	log.Println("authorized!")
 
-}
-
-func loadAuth(configPath string) *pkt.Auth {
-	auth := &pkt.Auth{}
-	configFile, err := ioutil.ReadFile(configPath)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = json.Unmarshal(configFile, auth)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	return auth
-}
-
-func saveAuth(auth *pkt.Auth, configPath string) {
-	configFile, err := json.MarshalIndent(auth, " ", " ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	err = ioutil.WriteFile(configPath, configFile, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
 }
