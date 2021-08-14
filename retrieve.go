@@ -18,7 +18,7 @@ func (c *Client) Retrieve(after string, offset int) ([]Item, error) {
 	}
 	response := retrieveResponse{}
 
-	err := c.Post(action, request, &response)
+	err := c.post(action, request, &response)
 
 	return response.Items(), err
 }

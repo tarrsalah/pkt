@@ -24,7 +24,7 @@ func NewClient(auth *Auth) *Client {
 	}
 }
 
-func (c *Client) Post(action string, in interface{}, out interface{}) error {
+func (c *Client) post(action string, in interface{}, out interface{}) error {
 	url := c.baseURL + action
 
 	requestBody, err := json.Marshal(in)
@@ -40,17 +40,17 @@ func (c *Client) Post(action string, in interface{}, out interface{}) error {
 	request.Header.Set("Content-Type", "application/json")
 	request.Header.Set("X-Accept", "application/json")
 
-	res, err := c.httpClient.Do(request)
+	response, err := c.httpClient.Do(request)
 	if err != nil {
 		return err
 	}
 
-	if res.StatusCode >= 400 {
-		return errors.New(res.Status)
+	if response.StatusCode >= 400 {
+		return errors.New(response.Status)
 	}
 
-	responseBody, err := ioutil.ReadAll(res.Body)
-	defer res.Body.Close()
+	responseBody, err := ioutil.ReadAll(response.Body)
+	defer response.Body.Close()
 	if err != nil {
 		return err
 	}

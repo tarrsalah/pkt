@@ -71,7 +71,7 @@ func (c *Client) getRequestToken(consumerKey, redirectURI string) (string, error
 		Code string `json:"code"`
 	}
 
-	err := c.Post("/oauth/request", in, &out)
+	err := c.post("/oauth/request", in, &out)
 	return out.Code, err
 }
 
@@ -89,6 +89,6 @@ func (c *Client) getAccessToken(consumerKey, code string) (string, error) {
 		Username    string `json:"username"`
 	}
 
-	err := c.Post("/oauth/authorize", in, &out)
+	err := c.post("/oauth/authorize", in, &out)
 	return out.AccessToken, err
 }

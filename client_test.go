@@ -42,7 +42,7 @@ func TestClient(t *testing.T) {
 	in := intype{Id: 0}
 	var out outtype
 
-	client.Post("/", in, &out)
+	client.post("/", in, &out)
 	if out.Id != 1 {
 		t.Fatalf("response body id expected to be 1, got %d", out.Id)
 	}
