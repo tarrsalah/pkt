@@ -7,23 +7,25 @@ import (
 
 type itemsTable struct {
 	*tview.Table
-	items        *items
-	handleSelect func(int, int)
+	items *items
 }
 
-func newItemsTable() *itemsTable {
+func newItemsTable(items *items) *itemsTable {
 	t := &itemsTable{
 		Table: tview.NewTable(),
+		items: items,
 	}
 
 	t.SetBorder(true)
 	t.SetSelectable(true, false)
+	t.refresh()
 
 	return t
 }
 
-func (t *itemsTable) Render() {
+func (t *itemsTable) refresh() {
 	t.Clear()
+
 	for i, item := range t.items.getSelected() {
 		tags := fmt.Sprintf("[yellow] %s", item.Tags())
 		title := fmt.Sprintf("%d. %s [green](%s)",
@@ -39,7 +41,6 @@ func (t *itemsTable) Render() {
 			SetExpansion(2))
 	}
 
-	t.SetSelectedFunc(t.handleSelect)
 	t.SetTitle(t.title())
 }
 

@@ -9,22 +9,23 @@ import (
 
 type tagsTable struct {
 	*tview.Table
-	tags         *tags
-	handleSelect func(int, int)
+	tags *tags
 }
 
-func newTagsTable() *tagsTable {
+func newTagsTable(tags *tags) *tagsTable {
 	t := &tagsTable{
 		Table: tview.NewTable(),
+		tags:  tags,
 	}
 
 	t.SetBorder(true)
 	t.SetSelectable(true, false)
 
+	t.refresh()
 	return t
 }
 
-func (t *tagsTable) Render() {
+func (t *tagsTable) refresh() {
 	t.Clear()
 	for i, tag := range t.tags.all {
 		cell := tview.NewTableCell(tag.Label)
@@ -36,7 +37,6 @@ func (t *tagsTable) Render() {
 		t.Table.SetCell(i, 0, cell)
 
 	}
-	t.SetSelectedFunc(t.handleSelect)
 	t.SetTitle(t.title())
 }
 

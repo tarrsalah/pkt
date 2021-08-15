@@ -38,7 +38,9 @@ func (w *Window) handleSelectItem(i, j int) {
 func (w *Window) handleSelectTag(i, _ int) {
 	w.tags.toggle(w.tags.get(i))
 	w.items.filter(w.tags)
-	w.Render()
+
+	w.itemsTable.refresh()
+	w.tagsTable.refresh()
 }
 
 // NewWindow returns a new UI window
@@ -47,12 +49,13 @@ func NewWindow(items pkt.Items) *Window {
 		Application: tview.NewApplication(),
 		items:       newItems(items),
 		tags:        newTags(items.Tags()),
-		itemsTable:  newItemsTable(),
-		tagsTable:   newTagsTable(),
 	}
 
-	w.itemsTable.handleSelect = w.handleSelectItem
-	w.tagsTable.handleSelect = w.handleSelectTag
+	w.itemsTable = newItemsTable(w.items)
+	w.tagsTable = newTagsTable(w.tags)
+
+	w.itemsTable.SetSelectedFunc(w.handleSelectItem)
+	w.tagsTable.SetSelectedFunc(w.handleSelectTag)
 
 	w.widgets = append(w.widgets, w.itemsTable)
 	w.widgets = append(w.widgets, w.tagsTable)
@@ -76,18 +79,6 @@ func NewWindow(items pkt.Items) *Window {
 			return event
 		}
 	})
-
-	w.Render()
 	w.Application.SetFocus(w.widgets[w.currentWidget])
-
 	return w
-}
-
-// Render the children
-func (w *Window) Render() {
-	w.itemsTable.items = w.items
-	w.tagsTable.tags = w.tags
-
-	w.itemsTable.Render()
-	w.tagsTable.Render()
 }
