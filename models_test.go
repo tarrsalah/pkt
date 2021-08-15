@@ -5,7 +5,8 @@ import (
 )
 
 func TestGetTaggedItems(t *testing.T) {
-	items := []Item{
+	var items Items
+	items = []Item{
 		{
 			TagsMap: map[string]Tag{
 				"elixir": {Label: "elixir"},
@@ -35,17 +36,17 @@ func TestGetTaggedItems(t *testing.T) {
 	}
 
 	tests := []struct {
-		tags   []string
+		tags   Tags
 		result int
 	}{
-		{[]string{"elixir"}, 3},
-		{[]string{"python"}, 2},
-		{[]string{"ruby"}, 1},
-		{[]string{"golang"}, 1},
+		{[]Tag{{Label: "elixir"}}, 3},
+		{[]Tag{{Label: "python"}}, 2},
+		{[]Tag{{Label: "ruby"}}, 1},
+		{[]Tag{{Label: "golang"}}, 1},
 	}
 
 	for _, tc := range tests {
-		filteredItems := getTaggedItems(items, tc.tags)
+		filteredItems := Items(items).GetTagged(tc.tags)
 		got := len(filteredItems)
 
 		if len(filteredItems) != tc.result {

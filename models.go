@@ -3,6 +3,7 @@ package pkt
 import (
 	"fmt"
 	"net/url"
+	"sort"
 )
 
 // PageCount is the default response page count
@@ -90,7 +91,7 @@ type Items []Item
 
 // Tags return a list of tags from a list of items
 func (items Items) Tags() Tags {
-	tags := []Tag{}
+	tags := Tags([]Tag{})
 	tagsMap := map[string]Tag{}
 
 	_ = tagsMap
@@ -105,23 +106,24 @@ func (items Items) Tags() Tags {
 		tags = append(tags, tag)
 	}
 
+	sort.Sort(tags)
 	return tags
 }
 
-// getTaggedItems filter a list of items
-func getTaggedItems(items []Item, filters []string) []Item {
-	if len(filters) == 0 {
-		filteredItems := make([]Item, len(items))
-		copy(filteredItems, items)
-		return filteredItems
+// GetTagged filter items by tags
+func (items Items) GetTagged(tags Tags) Items {
+	if len(tags) == 0 {
+		taggedItems := make([]Item, len(items))
+		copy(taggedItems, items)
+		return taggedItems
 	}
 
-	filteredItems := []Item{}
+	taggedItemes := []Item{}
 	for _, item := range items {
 		isTagged := false
 		for _, tag := range item.Tags() {
-			for _, filter := range filters {
-				if filter == tag.Label {
+			for _, filter := range tags {
+				if filter.Label == tag.Label {
 					isTagged = true
 					break
 				}
@@ -133,9 +135,10 @@ func getTaggedItems(items []Item, filters []string) []Item {
 		}
 
 		if isTagged {
-			filteredItems = append(filteredItems, item)
+			taggedItemes = append(taggedItemes, item)
 		}
 	}
 
-	return filteredItems
+	return taggedItemes
+
 }

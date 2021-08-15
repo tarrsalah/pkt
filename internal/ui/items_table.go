@@ -3,12 +3,11 @@ package ui
 import (
 	"fmt"
 	"github.com/rivo/tview"
-	"github.com/tarrsalah/pkt"
 )
 
 type itemsTable struct {
 	*tview.Table
-	items        pkt.Items
+	items        *items
 	handleSelect func(int, int)
 }
 
@@ -25,7 +24,7 @@ func newItemsTable() *itemsTable {
 
 func (t *itemsTable) Render() {
 	t.Clear()
-	for i, item := range t.items {
+	for i, item := range t.items.getSelected() {
 		tags := fmt.Sprintf("[yellow] %s", item.Tags())
 		title := fmt.Sprintf("%d. %s [green](%s)",
 			i+1, item.Title(),
@@ -45,7 +44,7 @@ func (t *itemsTable) Render() {
 }
 
 func (t *itemsTable) title() string {
-	count := len(t.items)
+	count := len(t.items.getSelected())
 	if count > 0 {
 		return fmt.Sprintf("Pocket items (%d)", count)
 	}

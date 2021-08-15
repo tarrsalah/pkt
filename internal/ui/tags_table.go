@@ -5,13 +5,11 @@ import (
 
 	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
-	"github.com/tarrsalah/pkt"
 )
 
 type tagsTable struct {
 	*tview.Table
-	tags         pkt.Tags
-	selectedTags map[int]struct{}
+	tags         *tags
 	handleSelect func(int, int)
 }
 
@@ -28,10 +26,10 @@ func newTagsTable() *tagsTable {
 
 func (t *tagsTable) Render() {
 	t.Clear()
-	for i, tag := range t.tags {
+	for i, tag := range t.tags.all {
 		cell := tview.NewTableCell(tag.Label)
 
-		if _, ok := t.selectedTags[i]; ok {
+		if t.tags.isSelected(tag) {
 			cell.SetTextColor(tcell.ColorYellow)
 			cell.SetAttributes(tcell.AttrUnderline | tcell.AttrBold)
 		}
@@ -43,9 +41,9 @@ func (t *tagsTable) Render() {
 }
 
 func (t *tagsTable) title() string {
-	l := len(t.tags)
+	l := len(t.tags.all)
 	if l > 0 {
-		return fmt.Sprintf("Tags (%d)", len(t.tags))
+		return fmt.Sprintf("Tags (%d)", len(t.tags.all))
 	}
 
 	return "Tags"
