@@ -9,13 +9,13 @@ import (
 
 type tagsTable struct {
 	*tview.Table
-	tags *tags
+	model *model
 }
 
-func newTagsTable(tags *tags) *tagsTable {
+func newTagsTable(model *model) *tagsTable {
 	t := &tagsTable{
 		Table: tview.NewTable(),
-		tags:  tags,
+		model: model,
 	}
 
 	t.SetBorder(true)
@@ -27,10 +27,10 @@ func newTagsTable(tags *tags) *tagsTable {
 
 func (t *tagsTable) refresh() {
 	t.Clear()
-	for i, tag := range t.tags.all {
+	for i, tag := range t.model.tags {
 		cell := tview.NewTableCell(tag.Label)
 
-		if t.tags.isSelected(tag) {
+		if t.model.isTagSelected(tag) {
 			cell.SetTextColor(tcell.ColorYellow)
 			cell.SetAttributes(tcell.AttrUnderline | tcell.AttrBold)
 		}
@@ -41,9 +41,9 @@ func (t *tagsTable) refresh() {
 }
 
 func (t *tagsTable) title() string {
-	l := len(t.tags.all)
+	l := len(t.model.tags)
 	if l > 0 {
-		return fmt.Sprintf("Tags (%d)", len(t.tags.all))
+		return fmt.Sprintf("Tags (%d)", len(t.model.tags))
 	}
 
 	return "Tags"

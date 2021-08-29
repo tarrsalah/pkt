@@ -7,13 +7,13 @@ import (
 
 type itemsTable struct {
 	*tview.Table
-	items *items
+	model *model
 }
 
-func newItemsTable(items *items) *itemsTable {
+func newItemsTable(model *model) *itemsTable {
 	t := &itemsTable{
 		Table: tview.NewTable(),
-		items: items,
+		model: model,
 	}
 
 	t.SetBorder(true)
@@ -26,7 +26,7 @@ func newItemsTable(items *items) *itemsTable {
 func (t *itemsTable) refresh() {
 	t.Clear()
 
-	for i, item := range t.items.getSelected() {
+	for i, item := range t.model.selecedItems {
 		tags := fmt.Sprintf("[yellow] %s", item.Tags())
 		title := fmt.Sprintf("%d. %s [green](%s)",
 			i+1, item.Title(),
@@ -45,7 +45,7 @@ func (t *itemsTable) refresh() {
 }
 
 func (t *itemsTable) title() string {
-	count := len(t.items.getSelected())
+	count := len(t.model.selecedItems)
 	if count > 0 {
 		return fmt.Sprintf("Pocket items (%d)", count)
 	}

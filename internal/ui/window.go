@@ -7,12 +7,60 @@ import (
 	"github.com/tarrsalah/pkt"
 )
 
+// The UI model
+type model struct {
+	tags         pkt.Tags
+	selectedTags map[string]struct{}
+	items        pkt.Items
+	selecedItems pkt.Items
+}
+
+func newModel(items pkt.Items) *model {
+	return &model{
+		items:        items,
+		selecedItems: items,
+		tags:         items.Tags(),
+		selectedTags: make(map[string]struct{}),
+	}
+}
+
+func (m *model) getItem(i int) pkt.Item {
+	return m.selecedItems[i]
+}
+
+func (m *model) getTag(i int) pkt.Tag {
+	return m.tags[i]
+}
+
+func (m *model) toggleTag(tag pkt.Tag) {
+	if _, ok := m.selectedTags[tag.Label]; ok {
+		delete(m.selectedTags, tag.Label)
+	} else {
+		m.selectedTags[tag.Label] = struct{}{}
+	}
+	m.selecedItems = m.items.GetTagged(m.getSelectedTags())
+}
+
+func (m *model) isTagSelected(tag pkt.Tag) bool {
+	_, isSelected := m.selectedTags[tag.Label]
+	return isSelected
+}
+
+func (m *model) getSelectedTags() pkt.Tags {
+	selected := []pkt.Tag{}
+	for _, tag := range m.tags {
+		if m.isTagSelected((tag)) {
+			selected = append(selected, tag)
+		}
+	}
+
+	return selected
+}
+
 // Window is the global ui component
 type Window struct {
 	*tview.Application
-
-	items *items
-	tags  *tags
+	model *model
 
 	itemsTable *itemsTable
 	tagsTable  *tagsTable
@@ -32,12 +80,11 @@ func (w *Window) nextWidget() {
 }
 
 func (w *Window) handleSelectItem(i, j int) {
-	browser.OpenURL(w.items.get(i).URL())
+	browser.OpenURL(w.model.getItem(i).URL())
 }
 
 func (w *Window) handleSelectTag(i, _ int) {
-	w.tags.toggle(w.tags.get(i))
-	w.items.filter(w.tags)
+	w.model.toggleTag(w.model.getTag(i))
 
 	w.itemsTable.refresh()
 	w.tagsTable.refresh()
@@ -47,12 +94,11 @@ func (w *Window) handleSelectTag(i, _ int) {
 func NewWindow(items pkt.Items) *Window {
 	w := &Window{
 		Application: tview.NewApplication(),
-		items:       newItems(items),
-		tags:        newTags(items.Tags()),
+		model:       newModel(items),
 	}
 
-	w.itemsTable = newItemsTable(w.items)
-	w.tagsTable = newTagsTable(w.tags)
+	w.itemsTable = newItemsTable(w.model)
+	w.tagsTable = newTagsTable(w.model)
 
 	w.itemsTable.SetSelectedFunc(w.handleSelectItem)
 	w.tagsTable.SetSelectedFunc(w.handleSelectTag)
