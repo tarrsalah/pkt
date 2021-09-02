@@ -1,38 +1,40 @@
-package bolt
+package internal
 
 import (
 	"encoding/json"
 	"log"
 	"sort"
 
-	"github.com/tarrsalah/pkt"
-	"github.com/tarrsalah/pkt/internal/config"
 	"go.etcd.io/bbolt"
 	"path/filepath"
 )
 
 var bucketName = []byte("pkt")
 
+// DB is a wrapper around bolt database connection
 type DB struct {
 	db *bbolt.DB
 }
 
-func NewDB() DB {
-	path := filepath.Join(config.Dir(), "pkt.bolt")
+// NewDB returns a new database connnection
+func NewDB() *DB {
+	path := filepath.Join(configDir(), "pkt.bolt")
 	db, err := bbolt.Open(path, 0666, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return DB{db}
+	return &DB{db}
 }
 
-func (b DB) Close() {
+// Close closed the database connection
+func (b *DB) Close() {
 	b.db.Close()
 }
 
-func (b DB) Get() []pkt.Item {
-	var items []pkt.Item
+// Get gets all stored pocket items
+func (b *DB) Get() (Items, error) {
+	var items []Item
 
 	err := b.db.View(func(tx *bbolt.Tx) error {
 		b := tx.Bucket(bucketName)
@@ -42,7 +44,7 @@ func (b DB) Get() []pkt.Item {
 
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
-			var item pkt.Item
+			var item Item
 			err := json.Unmarshal(v, &item)
 			if err != nil {
 				return err
@@ -53,7 +55,7 @@ func (b DB) Get() []pkt.Item {
 	})
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	// Sort
@@ -61,11 +63,12 @@ func (b DB) Get() []pkt.Item {
 		return items[i].AddedAt >= items[j].AddedAt
 	})
 
-	return items
+	return items, nil
 }
 
-func (b DB) Put(items []pkt.Item) {
-	err := b.db.Update(func(tx *bbolt.Tx) error {
+// Put saves a list of pocket items
+func (b *DB) Put(items []Item) error {
+	return b.db.Update(func(tx *bbolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists(bucketName)
 		if err != nil {
 			return err
@@ -81,8 +84,16 @@ func (b DB) Put(items []pkt.Item) {
 
 		return nil
 	})
+}
 
-	if err != nil {
-		panic(err)
-	}
+// Delete deletes a pocket item
+func (b *DB) Delete(item Item) error {
+	return b.db.Update(func(tx *bbolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists(bucketName)
+		if err != nil {
+			return err
+		}
+
+		return b.Delete([]byte(item.ID))
+	})
 }

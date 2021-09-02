@@ -4,14 +4,10 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
+	pkt "github.com/tarrsalah/pkt/internal"
 	"log"
 	"os"
 	"strings"
-
-	"github.com/tarrsalah/pkt"
-	"github.com/tarrsalah/pkt/internal/bolt"
-	"github.com/tarrsalah/pkt/internal/config"
-	"github.com/tarrsalah/pkt/internal/ui"
 )
 
 var (
@@ -41,65 +37,48 @@ func main() {
 	flag.Parse()
 
 	args := flag.Args()
-
 	if len(args) == 0 && *helpFlag {
 		usage()
 		return
 	}
 
-	if len(args) == 0 {
-		show()
-		return
-	}
+	if len(args) == 0 || args[0] == "show" {
+		db := pkt.NewDB()
+		defer db.Close()
 
-	if args[0] == "show" {
-		show()
+		auth := pkt.GetAuth()
+		client := pkt.NewClient(auth)
+
+		oldItems, _ := db.Get()
+		after := ""
+		if len(oldItems) > 0 {
+			after = oldItems[0].AddedAt
+		}
+
+		newItems, err := client.RetrieveAll(after)
+		if err != nil {
+			log.Fatal(err)
+		}
+		db.Put(newItems)
+
+		list, _ := db.Get()
+
+		ui := pkt.NewApp(list)
+		ui.Run()
 		return
 	}
 
 	if args[0] == "auth" {
-		auth()
+		r := bufio.NewReader(os.Stdin)
+		fmt.Print("pkt: enter your consumer key: ")
+		key, _ := r.ReadString('\n')
+		client := pkt.NewClient(nil)
+		auth := client.Authenticate(strings.TrimSpace(key))
+		pkt.PutAuth(auth)
+		log.Println("authorized!")
 		return
 	}
 
-	fmt.Fprintf(os.Stderr, `pkt %s: unknown ocmmand
-run %s for usage.
+	fmt.Fprintf(os.Stderr, `pkt %s: unknown command run %s for usage.
 `, args[0], "`pkt -h`")
-}
-
-func show() {
-	db := bolt.NewDB()
-	defer db.Close()
-
-	auth := config.GetAuth()
-	client := pkt.NewClient(auth)
-
-	oldItems := db.Get()
-	after := ""
-	if len(oldItems) > 0 {
-		after = oldItems[0].AddedAt
-	}
-
-	newItems, err := client.RetrieveAll(after)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	db.Put(newItems)
-
-	items := db.Get()
-	app := ui.NewWindow(items)
-	app.Run()
-}
-
-func auth() {
-	r := bufio.NewReader(os.Stdin)
-	fmt.Print("pkt: enter your consumer key: ")
-	key, _ := r.ReadString('\n')
-
-	client := pkt.NewClient(nil)
-	auth := client.Authenticate(strings.TrimSpace(key))
-	config.PutAuth(auth)
-	log.Println("authorized!")
-
 }

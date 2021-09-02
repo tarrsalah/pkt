@@ -1,4 +1,4 @@
-package pkt
+package internal
 
 import (
 	"fmt"
@@ -141,4 +141,15 @@ func (items Items) GetTagged(tags Tags) Items {
 
 	return taggedItemes
 
+}
+
+func (item Item) isTagged(tags Tags) bool {
+	for _, tag := range item.Tags() {
+		for _, filter := range tags {
+			if filter.Label == tag.Label {
+				return true
+			}
+		}
+	}
+	return false
 }

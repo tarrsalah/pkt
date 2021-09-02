@@ -4,7 +4,7 @@ build:
 	go build -o pkt ./cmd/pkt 
 
 test:
-	go test ./... -v
+	go test ./...
 
 run: build
 	./pkt

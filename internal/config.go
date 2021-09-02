@@ -1,20 +1,18 @@
-package config
+package internal
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
 	"path/filepath"
-
-	"encoding/json"
-	"github.com/tarrsalah/pkt"
-	"io/ioutil"
 )
 
 // GetAuth returns the saved pocket credentials
-func GetAuth() *pkt.Auth {
-	auth := &pkt.Auth{}
-	configFile, err := ioutil.ReadFile(Path())
+func GetAuth() *Creds {
+	auth := &Creds{}
+	configFile, err := ioutil.ReadFile(configPath())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,19 +26,19 @@ func GetAuth() *pkt.Auth {
 }
 
 // PutAuth saves the pocket credentials into a file
-func PutAuth(auth *pkt.Auth) {
+func PutAuth(auth *Creds) {
 	content, err := json.MarshalIndent(auth, " ", " ")
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = ioutil.WriteFile(Path(), content, 0644)
+	err = ioutil.WriteFile(configPath(), content, 0644)
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-// Dir returns the path of the confi directory
-func Dir() string {
+// configDir returns the path of the confi directory
+func configDir() string {
 	user, err := user.Current()
 	if err != nil {
 		log.Fatal(err)
@@ -55,7 +53,7 @@ func Dir() string {
 	return configDir
 }
 
-// Path returns the Path of the config file
-func Path() string {
-	return filepath.Join(Dir(), "config.json")
+// configPath returns the configPath of the config file
+func configPath() string {
+	return filepath.Join(configDir(), "config.json")
 }
